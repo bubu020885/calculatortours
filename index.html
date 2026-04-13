@@ -15,7 +15,7 @@
     </header>
 
     <main class="container">
-        <!-- SCHRITT 1: EINGABEMASKE -->
+        <!-- SCHRITT 1: EINGABEMASKE - Grundeinstellungen -->
         <section class="card" id="step-setup">
             <header class="card-header">
                 <span class="step-badge">1</span>
@@ -55,11 +55,11 @@
             </div>
         </section>
 
-        <!-- SCHRITT 2: TAGESPLANUNG -->
+        <!-- SCHRITT 2: MUSTERWOCHE -->
         <section class="card" id="step-plan">
             <header class="card-header">
                 <span class="step-badge">2</span>
-                <h2>Wochenplanung</h2>
+                <h2>Musterwoche <small class="card-hint">(Vorlage für die Jahresplanung)</small></h2>
                 <div class="bulk-actions">
                     <button type="button" class="btn btn-low" data-bulk="low">Alle LOW</button>
                     <button type="button" class="btn btn-medium" data-bulk="medium">Alle MEDIUM</button>
@@ -71,37 +71,98 @@
             <div class="days-grid" id="daysGrid"></div>
         </section>
 
-        <!-- SCHRITT 3: AUSWERTUNG -->
+        <!-- SCHRITT 3: AUSWERTUNG / MODUSWAHL -->
         <section class="card" id="step-result">
             <header class="card-header">
                 <span class="step-badge">3</span>
                 <h2>Auswertung</h2>
+                <nav class="tabs" id="modeTabs">
+                    <button type="button" class="tab is-active" data-view="week">Wochenplanung</button>
+                    <button type="button" class="tab" data-view="year">Jahresplanung</button>
+                </nav>
             </header>
 
-            <div class="kpi-grid">
-                <div class="kpi">
-                    <span class="kpi-label">Führungen / Woche</span>
-                    <span class="kpi-value" id="kpiTours">0</span>
+            <!-- MODUS: Wochenplanung -->
+            <div class="view view-week">
+                <div class="kpi-grid">
+                    <div class="kpi">
+                        <span class="kpi-label">Führungen / Woche</span>
+                        <span class="kpi-value" id="kpiTours">0</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Besucher / Woche</span>
+                        <span class="kpi-value" id="kpiVisitors">0</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Führungsstunden</span>
+                        <span class="kpi-value" id="kpiHours">0 h</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Ø Auslastung</span>
+                        <span class="kpi-value" id="kpiLoad">–</span>
+                    </div>
                 </div>
-                <div class="kpi">
-                    <span class="kpi-label">Besucher / Woche</span>
-                    <span class="kpi-value" id="kpiVisitors">0</span>
-                </div>
-                <div class="kpi">
-                    <span class="kpi-label">Führungsstunden</span>
-                    <span class="kpi-value" id="kpiHours">0 h</span>
-                </div>
-                <div class="kpi">
-                    <span class="kpi-label">Ø Auslastung</span>
-                    <span class="kpi-value" id="kpiLoad">–</span>
+
+                <div class="legend">
+                    <span class="legend-item"><span class="dot dot-low"></span>LOW</span>
+                    <span class="legend-item"><span class="dot dot-medium"></span>MEDIUM</span>
+                    <span class="legend-item"><span class="dot dot-high"></span>HIGH</span>
+                    <span class="legend-item"><span class="dot dot-over"></span>ÜBER HIGH</span>
                 </div>
             </div>
 
-            <div class="legend">
-                <span class="legend-item"><span class="dot dot-low"></span>LOW</span>
-                <span class="legend-item"><span class="dot dot-medium"></span>MEDIUM</span>
-                <span class="legend-item"><span class="dot dot-high"></span>HIGH</span>
-                <span class="legend-item"><span class="dot dot-over"></span>ÜBER HIGH</span>
+            <!-- MODUS: Jahresplanung -->
+            <div class="view view-year" hidden>
+                <div class="year-controls">
+                    <div class="field">
+                        <label for="yearSelect">Jahr</label>
+                        <input type="number" id="yearSelect" min="2000" max="2099" value="2026">
+                    </div>
+                    <div class="field field-check">
+                        <label><input type="checkbox" id="excludeHolidays" checked> Feiertage als Ruhetage (0 Führungen)</label>
+                    </div>
+                    <div class="year-actions">
+                        <button type="button" class="btn btn-primary" id="applyTemplateBtn">Musterwoche auf Jahr anwenden</button>
+                        <button type="button" class="btn btn-ghost" id="clearYearBtn">Jahr zurücksetzen</button>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi">
+                        <span class="kpi-label">Führungen / Jahr</span>
+                        <span class="kpi-value" id="yearKpiTours">0</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Gäste / Jahr</span>
+                        <span class="kpi-value" id="yearKpiGuests">0</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">MA-Stunden / Jahr</span>
+                        <span class="kpi-value" id="yearKpiHours">0 h</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Führungstage</span>
+                        <span class="kpi-value" id="yearKpiDays">0</span>
+                    </div>
+                </div>
+
+                <div class="year-table-wrap">
+                    <table class="year-table">
+                        <thead>
+                            <tr>
+                                <th>Wochentag</th>
+                                <th>Datum</th>
+                                <th>Ferien / Feiertag</th>
+                                <th>Auslastung</th>
+                                <th>Führungen</th>
+                                <th>Mögl. Gäste</th>
+                                <th>MA-Stunden</th>
+                                <th>Notizen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="yearTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
