@@ -7,170 +7,174 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="app-header">
-        <div class="container">
-            <h1>Besucher-Führungen-Rechner</h1>
-            <p class="subtitle">Planung und Auslastungsberechnung für Besucherführungen</p>
-        </div>
+    <header>
+        <h1>Besucher-Führungen-Rechner</h1>
+        <p>Planen Sie Besucherführungen pro Tag für ein komplettes Kalenderjahr</p>
     </header>
 
-    <main class="container">
-        <!-- SCHRITT 1: EINGABEMASKE - Grundeinstellungen -->
-        <section class="card" id="step-setup">
-            <header class="card-header">
-                <span class="step-badge">1</span>
-                <h2>Grundeinstellungen</h2>
-            </header>
+    <main>
+        <section class="input-form">
+            <h2>Einstellungen</h2>
 
-            <div class="grid-2">
-                <div class="field">
-                    <label for="groupSize">Gruppengröße (Personen pro Führung)</label>
-                    <input type="number" id="groupSize" min="1" max="200" value="15">
-                    <small>Maximale Teilnehmerzahl pro Führung.</small>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="yearSelect">Jahr</label>
+                    <input type="number" id="yearSelect" min="2000" max="2099" value="2026">
                 </div>
-
-                <div class="field">
-                    <label for="tourDuration">Dauer einer Führung (Minuten)</label>
+                <div class="form-field">
+                    <label for="stateSelect">Bundesland <span class="optional">(für Schulferien)</span></label>
+                    <select id="stateSelect">
+                        <option value="">– Bundesweit (nur Feiertage) –</option>
+                        <option value="BW">Baden-Württemberg</option>
+                        <option value="BY">Bayern</option>
+                        <option value="BE">Berlin</option>
+                        <option value="BB">Brandenburg</option>
+                        <option value="HB">Bremen</option>
+                        <option value="HH">Hamburg</option>
+                        <option value="HE">Hessen</option>
+                        <option value="MV">Mecklenburg-Vorpommern</option>
+                        <option value="NI">Niedersachsen</option>
+                        <option value="NW">Nordrhein-Westfalen</option>
+                        <option value="RP">Rheinland-Pfalz</option>
+                        <option value="SL">Saarland</option>
+                        <option value="SN">Sachsen</option>
+                        <option value="ST">Sachsen-Anhalt</option>
+                        <option value="SH">Schleswig-Holstein</option>
+                        <option value="TH">Thüringen</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="groupSize">Gruppengröße</label>
+                    <input type="number" id="groupSize" min="1" max="200" value="15">
+                </div>
+                <div class="form-field">
+                    <label for="tourDuration">Dauer je Führung (Min.)</label>
                     <input type="number" id="tourDuration" min="5" max="600" step="5" value="60">
-                    <small>Zeitliche Dauer einer einzelnen Führung.</small>
                 </div>
             </div>
 
-            <h3 class="section-title">Auslastungsstufen – Anzahl Führungen pro Tag</h3>
-            <p class="hint">Diese Werte dienen als Vorbelegung und Referenz für die Auslastungsampel (LOW / MEDIUM / HIGH).</p>
-
-            <div class="grid-3">
-                <div class="field level-low">
-                    <label for="levelLow">LOW · Anzahl Führungen</label>
+            <div class="form-grid form-grid-2">
+                <div class="form-field">
+                    <label for="levelLow">LOW · Führungen/Tag</label>
                     <input type="number" id="levelLow" min="0" max="50" value="2">
                 </div>
-                <div class="field level-medium">
-                    <label for="levelMedium">MEDIUM · Anzahl Führungen</label>
+                <div class="form-field">
+                    <label for="levelMedium">MEDIUM · Führungen/Tag</label>
                     <input type="number" id="levelMedium" min="0" max="50" value="4">
                 </div>
-                <div class="field level-high">
-                    <label for="levelHigh">HIGH · Anzahl Führungen</label>
+                <div class="form-field">
+                    <label for="levelHigh">HIGH · Führungen/Tag</label>
                     <input type="number" id="levelHigh" min="0" max="50" value="6">
                 </div>
-            </div>
-        </section>
-
-        <!-- SCHRITT 2: MUSTERWOCHE -->
-        <section class="card" id="step-plan">
-            <header class="card-header">
-                <span class="step-badge">2</span>
-                <h2>Musterwoche <small class="card-hint">(Vorlage für die Jahresplanung)</small></h2>
-                <div class="bulk-actions">
-                    <button type="button" class="btn btn-low" data-bulk="low">Alle LOW</button>
-                    <button type="button" class="btn btn-medium" data-bulk="medium">Alle MEDIUM</button>
-                    <button type="button" class="btn btn-high" data-bulk="high">Alle HIGH</button>
-                    <button type="button" class="btn btn-ghost" data-bulk="zero">Zurücksetzen</button>
-                </div>
-            </header>
-
-            <div class="days-grid" id="daysGrid"></div>
-        </section>
-
-        <!-- SCHRITT 3: AUSWERTUNG / MODUSWAHL -->
-        <section class="card" id="step-result">
-            <header class="card-header">
-                <span class="step-badge">3</span>
-                <h2>Auswertung</h2>
-                <nav class="tabs" id="modeTabs">
-                    <button type="button" class="tab is-active" data-view="week">Wochenplanung</button>
-                    <button type="button" class="tab" data-view="year">Jahresplanung</button>
-                </nav>
-            </header>
-
-            <!-- MODUS: Wochenplanung -->
-            <div class="view view-week">
-                <div class="kpi-grid">
-                    <div class="kpi">
-                        <span class="kpi-label">Führungen / Woche</span>
-                        <span class="kpi-value" id="kpiTours">0</span>
-                    </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Besucher / Woche</span>
-                        <span class="kpi-value" id="kpiVisitors">0</span>
-                    </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Führungsstunden</span>
-                        <span class="kpi-value" id="kpiHours">0 h</span>
-                    </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Ø Auslastung</span>
-                        <span class="kpi-value" id="kpiLoad">–</span>
-                    </div>
-                </div>
-
-                <div class="legend">
-                    <span class="legend-item"><span class="dot dot-low"></span>LOW</span>
-                    <span class="legend-item"><span class="dot dot-medium"></span>MEDIUM</span>
-                    <span class="legend-item"><span class="dot dot-high"></span>HIGH</span>
-                    <span class="legend-item"><span class="dot dot-over"></span>ÜBER HIGH</span>
+                <div class="form-field check">
+                    <label>
+                        <input type="checkbox" id="excludeHolidays" checked>
+                        Feiertage als Ruhetage (0 Führungen)
+                    </label>
                 </div>
             </div>
 
-            <!-- MODUS: Jahresplanung -->
-            <div class="view view-year" hidden>
-                <div class="year-controls">
-                    <div class="field">
-                        <label for="yearSelect">Jahr</label>
-                        <input type="number" id="yearSelect" min="2000" max="2099" value="2026">
-                    </div>
-                    <div class="field field-check">
-                        <label><input type="checkbox" id="excludeHolidays" checked> Feiertage als Ruhetage (0 Führungen)</label>
-                    </div>
-                    <div class="year-actions">
-                        <button type="button" class="btn btn-primary" id="applyTemplateBtn">Musterwoche auf Jahr anwenden</button>
-                        <button type="button" class="btn btn-ghost" id="clearYearBtn">Jahr zurücksetzen</button>
-                    </div>
+            <fieldset class="template-week">
+                <legend>Musterwoche – Anzahl Führungen pro Wochentag</legend>
+                <div class="hint">Legen Sie je Wochentag die Anzahl der Führungen fest. Schnellwahl über LOW / MED / HIGH. Diese Musterwoche wird bei „Jahreskalender generieren" auf jedes passende Datum übertragen.</div>
+                <div class="template-grid" id="templateGrid"></div>
+                <div class="template-bulk">
+                    <button type="button" data-bulk="low" class="btn-secondary">Alle LOW</button>
+                    <button type="button" data-bulk="medium" class="btn-secondary">Alle MEDIUM</button>
+                    <button type="button" data-bulk="high" class="btn-secondary">Alle HIGH</button>
+                    <button type="button" data-bulk="zero" class="btn-secondary">Zurücksetzen</button>
                 </div>
+            </fieldset>
 
-                <div class="kpi-grid">
-                    <div class="kpi">
-                        <span class="kpi-label">Führungen / Jahr</span>
-                        <span class="kpi-value" id="yearKpiTours">0</span>
-                    </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Gäste / Jahr</span>
-                        <span class="kpi-value" id="yearKpiGuests">0</span>
-                    </div>
-                    <div class="kpi">
-                        <span class="kpi-label">MA-Stunden / Jahr</span>
-                        <span class="kpi-value" id="yearKpiHours">0 h</span>
-                    </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Führungstage</span>
-                        <span class="kpi-value" id="yearKpiDays">0</span>
-                    </div>
+            <div class="form-actions">
+                <button type="button" id="generateBtn" class="btn-success">Jahreskalender generieren</button>
+                <button type="button" id="applyTemplateBtn">Musterwoche erneut anwenden</button>
+                <button type="button" id="resetYearBtn" class="btn-secondary">Jahr zurücksetzen</button>
+            </div>
+
+            <div class="info-msg" id="infoMsg"></div>
+        </section>
+
+        <div class="actions-bar">
+            <div class="actions">
+                <button class="tab-btn is-active" data-view="week">Wochenauswertung</button>
+                <button class="tab-btn" data-view="year">Jahreskalender</button>
+            </div>
+            <div class="legend">
+                <span class="legend-item"><span class="legend-swatch sw-weekend"></span>Wochenende</span>
+                <span class="legend-item"><span class="legend-swatch sw-holiday"></span>Feiertag</span>
+                <span class="legend-item"><span class="legend-swatch sw-school"></span>Schulferien</span>
+            </div>
+        </div>
+
+        <!-- MODUS 1: Wochenauswertung -->
+        <div class="view view-week">
+            <div class="summary-bar">
+                <div class="summary-card">
+                    <div class="label">Führungen / Woche</div>
+                    <div class="value" id="kpiTours">0</div>
                 </div>
+                <div class="summary-card secondary">
+                    <div class="label">Besucher / Woche</div>
+                    <div class="value" id="kpiVisitors">0</div>
+                </div>
+                <div class="summary-card secondary">
+                    <div class="label">MA-Stunden</div>
+                    <div class="value" id="kpiHours">0 h</div>
+                </div>
+                <div class="summary-card secondary">
+                    <div class="label">Ø Auslastung</div>
+                    <div class="value" id="kpiLoad">–</div>
+                </div>
+            </div>
+        </div>
 
-                <div class="year-table-wrap">
-                    <table class="year-table">
+        <!-- MODUS 2: Jahreskalender -->
+        <div class="view view-year" hidden>
+            <div class="summary-bar">
+                <div class="summary-card">
+                    <div class="label">Führungen / Jahr</div>
+                    <div class="value" id="yearKpiTours">0</div>
+                </div>
+                <div class="summary-card secondary">
+                    <div class="label">Gäste / Jahr</div>
+                    <div class="value" id="yearKpiGuests">0</div>
+                </div>
+                <div class="summary-card secondary">
+                    <div class="label">MA-Stunden</div>
+                    <div class="value" id="yearKpiHours">0 h</div>
+                </div>
+                <div class="summary-card secondary">
+                    <div class="label">Führungstage</div>
+                    <div class="value" id="yearKpiDays">0</div>
+                </div>
+            </div>
+
+            <div class="card table-card">
+                <h3>Jahreskalender</h3>
+                <div class="table-wrapper">
+                    <table id="dayTable">
                         <thead>
                             <tr>
-                                <th>Wochentag</th>
                                 <th>Datum</th>
-                                <th>Ferien / Feiertag</th>
+                                <th>Tag</th>
+                                <th>Feiertag / Schulferien</th>
                                 <th>Auslastung</th>
                                 <th>Führungen</th>
-                                <th>Mögl. Gäste</th>
-                                <th>MA-Stunden</th>
+                                <th>Gäste</th>
+                                <th>MA-Std.</th>
                                 <th>Notizen</th>
                             </tr>
                         </thead>
-                        <tbody id="yearTableBody"></tbody>
+                        <tbody id="dayTableBody"></tbody>
                     </table>
                 </div>
             </div>
-        </section>
+        </div>
     </main>
 
-    <footer class="app-footer">
-        <div class="container">
-            <small>&copy; Besucher-Führungen-Rechner</small>
-        </div>
+    <footer>
+        <p>&copy; Besucher-Führungen-Rechner · Schulferien via openholidaysapi.org / ferien-api.de</p>
     </footer>
 
     <script src="script.js"></script>
