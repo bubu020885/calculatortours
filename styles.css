@@ -148,10 +148,14 @@ section h2 { font-size: 1.3rem; }
   font-size: 0.95rem;
 }
 .template-week .hint {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  color: #1e3a8a;
+  background: #dbeafe;
+  border-left: 4px solid #3b82f6;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 14px;
+  line-height: 1.55;
 }
 
 .template-grid {
@@ -274,11 +278,16 @@ button:disabled { background: #9ca3af; cursor: not-allowed; }
 /* Info messages */
 .info-msg {
   margin-top: 12px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  padding: 11px 16px;
+  border-radius: 8px;
+  border-left: 5px solid #d1d5db;
+  background: #f9fafb;
   color: var(--text-muted);
-  line-height: 1.4;
+  font-weight: 500;
 }
-.info-msg:empty { display: none !important; padding: 0; border: 0; }
+.info-msg:empty { display: none !important; padding: 0; border: 0; background: none; }
 .info-msg.error,
 .info-msg.warning,
 .info-msg.success,
