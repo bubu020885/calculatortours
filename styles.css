@@ -350,6 +350,65 @@ button:disabled { background: #9ca3af; cursor: not-allowed; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Cost bar */
+.cost-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.cost-card {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  padding: 18px 22px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.cost-card .label {
+  font-size: 0.78rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.cost-card .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Monthly grid */
+.monthly-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.monthly-item {
+  padding: 12px;
+  background: var(--primary-light);
+  border-radius: 6px;
+  text-align: center;
+}
+.monthly-item .month-name {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.monthly-item .month-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.monthly-item .month-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
 /* Actions bar with tabs */
 .actions-bar {
   display: flex;
@@ -536,12 +595,15 @@ footer {
 /* Responsive */
 @media (max-width: 900px) {
   .summary-bar { grid-template-columns: repeat(2, 1fr); }
+  .cost-bar { grid-template-columns: 1fr; }
+  .monthly-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 600px) {
   body { padding: 12px; }
   header h1 { font-size: 1.5rem; }
   .form-grid { grid-template-columns: 1fr; }
   .summary-bar { grid-template-columns: 1fr; }
+  .monthly-grid { grid-template-columns: repeat(2, 1fr); }
   #dayTable { font-size: 0.78rem; }
   #dayTable th,
   #dayTable td { padding: 5px 6px; }

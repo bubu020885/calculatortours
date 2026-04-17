@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Besucher-Führungen-Rechner</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <header>
@@ -74,6 +77,21 @@
                 </div>
             </div>
 
+            <div class="form-grid form-grid-2">
+                <div class="form-field">
+                    <label for="hourlyWage">Stundenlohn (€/h)</label>
+                    <input type="number" id="hourlyWage" min="0" max="999" step="0.50" value="15.00">
+                </div>
+                <div class="form-field">
+                    <label for="svRate">SV-Aufschlag Arbeitgeber (%)</label>
+                    <input type="number" id="svRate" min="0" max="100" step="0.5" value="20">
+                </div>
+                <div class="form-field">
+                    <label for="bufferRate">Puffer Krankheit / Urlaub (%)</label>
+                    <input type="number" id="bufferRate" min="0" max="100" step="0.5" value="25">
+                </div>
+            </div>
+
             <fieldset class="template-week">
                 <legend>Musterwoche – Anzahl Führungen pro Wochentag</legend>
                 <div class="hint">Legen Sie je Wochentag die Anzahl der Führungen fest. Schnellwahl über LOW / MED / HIGH. Diese Musterwoche wird bei „Jahreskalender generieren" auf jedes passende Datum übertragen.</div>
@@ -87,6 +105,8 @@
             </fieldset>
 
             <div class="form-actions">
+                <button type="button" id="loadProjectBtn" class="btn-secondary">Projekt laden</button>
+                <input type="file" id="loadFileInput" accept=".json" class="hidden">
                 <button type="button" id="generateBtn" class="btn-success">Jahreskalender generieren</button>
                 <button type="button" id="applyTemplateBtn">Musterwoche erneut anwenden</button>
                 <button type="button" id="resetYearBtn" class="btn-secondary">Jahr zurücksetzen</button>
@@ -99,6 +119,11 @@
             <div class="actions">
                 <button class="tab-btn is-active" data-view="week">Wochenauswertung</button>
                 <button class="tab-btn" data-view="year">Jahreskalender</button>
+            </div>
+            <div class="actions" id="exportActions" hidden>
+                <button type="button" id="exportExcelBtn" class="btn-success">Excel-Export</button>
+                <button type="button" id="exportPdfBtn">PDF-Export</button>
+                <button type="button" id="saveProjectBtn" class="btn-secondary">Projekt speichern</button>
             </div>
             <div class="legend">
                 <span class="legend-item"><span class="legend-swatch sw-weekend"></span>Wochenende</span>
@@ -127,6 +152,20 @@
                     <div class="value" id="kpiLoad">–</div>
                 </div>
             </div>
+            <div class="cost-bar">
+                <div class="cost-card">
+                    <div class="label">MA-Kosten (Brutto)</div>
+                    <div class="value" id="kpiCost">0,00 €</div>
+                </div>
+                <div class="cost-card">
+                    <div class="label">MA-Kosten + SV</div>
+                    <div class="value" id="kpiCostSV">0,00 €</div>
+                </div>
+                <div class="cost-card">
+                    <div class="label">MA-Kosten + SV + Puffer</div>
+                    <div class="value" id="kpiCostFull">0,00 €</div>
+                </div>
+            </div>
         </div>
 
         <!-- MODUS 2: Jahreskalender -->
@@ -148,6 +187,25 @@
                     <div class="label">Führungstage</div>
                     <div class="value" id="yearKpiDays">0</div>
                 </div>
+            </div>
+            <div class="cost-bar">
+                <div class="cost-card">
+                    <div class="label">MA-Kosten (Brutto)</div>
+                    <div class="value" id="yearKpiCost">0,00 €</div>
+                </div>
+                <div class="cost-card">
+                    <div class="label">MA-Kosten + SV</div>
+                    <div class="value" id="yearKpiCostSV">0,00 €</div>
+                </div>
+                <div class="cost-card">
+                    <div class="label">MA-Kosten + SV + Puffer</div>
+                    <div class="value" id="yearKpiCostFull">0,00 €</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Monatsübersicht</h3>
+                <div class="monthly-grid" id="monthlyGrid"></div>
             </div>
 
             <div class="card table-card">
@@ -178,5 +236,6 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="export.js"></script>
 </body>
 </html>
