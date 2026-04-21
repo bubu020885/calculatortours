@@ -6,9 +6,10 @@ const $=A.$,state=A.state;
 // ---- Excel Export ----
 function exportExcel(){
   if(!state.yearDays.length)return;
-  const gs=A.groupSize(),dur=A.duration(),w=A.wage(),sv=A.svFactor(),bf=A.bufFactor();
+  const gs=A.groupSize(),dur=A.duration(),sDur=A.staffMin(),w=A.wage(),sv=A.svFactor(),bf=A.bufFactor();
+  const vl=A.vorlauf(),nl=A.nachlauf();
   const rows=state.yearDays.map(d=>{
-    const hrs=d.tours*dur/60;
+    const hrs=d.tours*sDur/60;
     return{Datum:A.formatDate(d.date),Tag:A.DOW_SHORT[d.dow],Feiertag:d.ph,Schulferien:d.sh,
       Auslastung:d.level==="none"?"Keine":d.level.toUpperCase(),Führungen:d.tours,
       Gäste:d.tours*gs,"MA-Stunden":Math.round(hrs*100)/100,
@@ -27,12 +28,14 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,ws1,"Jahreskalender");
   const ws2=XLSX.utils.json_to_sheet(mRows);
   XLSX.utils.book_append_sheet(wb,ws2,"Monatsübersicht");
-  // Settings sheet
   const sRows=[
     {Einstellung:"Jahr",Wert:state.currentYear},
     {Einstellung:"Bundesland",Wert:state.currentState?A.BUNDESLAENDER[state.currentState]:"Bundesweit"},
     {Einstellung:"Gruppengröße",Wert:gs},
     {Einstellung:"Dauer je Führung (Min.)",Wert:dur},
+    {Einstellung:"Vorlaufzeit (Min.)",Wert:vl},
+    {Einstellung:"Nachlaufzeit (Min.)",Wert:nl},
+    {Einstellung:"Arbeitszeit je Führung (Min.)",Wert:sDur},
     {Einstellung:"Stundenlohn (€/h)",Wert:w},
     {Einstellung:"SV-Aufschlag (%)",Wert:Math.round((sv-1)*100*10)/10},
     {Einstellung:"Puffer Krankheit/Urlaub (%)",Wert:Math.round((bf-1)*100*10)/10},
@@ -50,9 +53,10 @@ function exportPdf(){
   if(!state.yearDays.length)return;
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF("p","mm","a4");
-  const gs=A.groupSize(),dur=A.duration(),w=A.wage(),sv=A.svFactor(),bf=A.bufFactor();
+  const gs=A.groupSize(),dur=A.duration(),sDur=A.staffMin(),w=A.wage(),sv=A.svFactor(),bf=A.bufFactor();
+  const vl=A.vorlauf(),nl=A.nachlauf();
   let tt=0,ad=0;state.yearDays.forEach(d=>{tt+=d.tours;if(d.tours>0)ad++;});
-  const totalHrs=tt*dur/60,totalCost=totalHrs*w;
+  const totalHrs=tt*sDur/60,totalCost=totalHrs*w;
   // Page 1: Übersicht
   doc.setFontSize(18);doc.setFont(undefined,"bold");
   doc.text("Besucher-Führungen-Rechner",14,20);
@@ -64,6 +68,9 @@ function exportPdf(){
     ["Bundesland",state.currentState?A.BUNDESLAENDER[state.currentState]:"Bundesweit"],
     ["Gruppengröße",String(gs)],
     ["Dauer je Führung",dur+" Min."],
+    ["Vorlaufzeit",vl+" Min."],
+    ["Nachlaufzeit",nl+" Min."],
+    ["Arbeitszeit je Führung",sDur+" Min."],
     ["Stundenlohn",A.formatEuro(w)],
     ["SV-Aufschlag",Math.round((sv-1)*100*10)/10+" %"],
     ["Puffer Krankheit/Urlaub",Math.round((bf-1)*100*10)/10+" %"],
@@ -77,7 +84,7 @@ function exportPdf(){
   doc.autoTable({startY:y2+3,head:[["Kennzahl","Wert"]],body:[
     ["Führungen / Jahr",String(tt)],
     ["Gäste / Jahr",String(tt*gs)],
-    ["MA-Stunden",A.formatHours(tt*dur)],
+    ["MA-Stunden",A.formatHours(tt*sDur)],
     ["Führungstage",String(ad)],
     ["MA-Kosten (Brutto)",A.formatEuro(totalCost)],
     ["MA-Kosten + SV",A.formatEuro(totalCost*sv)],
@@ -88,7 +95,6 @@ function exportPdf(){
   let y3=doc.lastAutoTable.finalY+8;
   doc.setFontSize(12);doc.setFont(undefined,"bold");doc.text("Monatsübersicht",14,y3);
   const mBody=ms.map((m,i)=>{const hrs=m.mins/60;return[A.MONTH_NAMES[i],m.tours,m.guests,m.days,A.formatHours(m.mins),A.formatEuro(hrs*w),A.formatEuro(hrs*w*sv),A.formatEuro(hrs*w*sv*bf)];});
-  // Summenzeile
   const sumT=ms.reduce((s,m)=>s+m.tours,0),sumG=ms.reduce((s,m)=>s+m.guests,0),sumD=ms.reduce((s,m)=>s+m.days,0),sumM=ms.reduce((s,m)=>s+m.mins,0);
   const sumH=sumM/60;mBody.push(["GESAMT",sumT,sumG,sumD,A.formatHours(sumM),A.formatEuro(sumH*w),A.formatEuro(sumH*w*sv),A.formatEuro(sumH*w*sv*bf)]);
   doc.autoTable({startY:y3+3,head:[["Monat","Führ.","Gäste","Tage","Std.","Kosten","+ SV","+ SV + Puffer"]],body:mBody,theme:"grid",headStyles:{fillColor:[63,81,181]},styles:{fontSize:8,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"}},margin:{left:14,right:14},didParseCell:function(data){if(data.row.index===mBody.length-1){data.cell.styles.fontStyle="bold";data.cell.styles.fillColor=[232,234,246];}}});
@@ -105,7 +111,7 @@ function exportPdf(){
     const body=mDays.map(d=>{
       const hol=(d.ph&&d.sh)?d.ph+" / "+d.sh:d.ph||d.sh||"";
       const lvl=d.level==="none"?"–":d.level==="custom"?"Manuell":d.level.toUpperCase();
-      return[A.formatDate(d.date),A.DOW_SHORT[d.dow],hol,lvl,d.tours||"",d.tours?d.tours*gs:"",d.tours?A.formatHours(d.tours*dur):"",d.notes];
+      return[A.formatDate(d.date),A.DOW_SHORT[d.dow],hol,lvl,d.tours||"",d.tours?d.tours*gs:"",d.tours?A.formatHours(d.tours*sDur):"",d.notes];
     });
     doc.autoTable({startY:30,head:[["Datum","Tag","Feiertag/Ferien","Ausl.","Führ.","Gäste","Std.","Notizen"]],body:body,theme:"striped",headStyles:{fillColor:[48,63,159]},styles:{fontSize:7.5,cellPadding:1.5},columnStyles:{0:{cellWidth:22},1:{cellWidth:10},2:{cellWidth:42},3:{cellWidth:18},4:{cellWidth:12,halign:"center"},5:{cellWidth:14,halign:"right"},6:{cellWidth:16,halign:"right"},7:{cellWidth:40}},margin:{left:10,right:10},didParseCell:function(data){if(data.section==="body"){const d=mDays[data.row.index];if(!d)return;if(d.ph)data.cell.styles.fillColor=[254,226,226];else if(d.sh)data.cell.styles.fillColor=[254,243,199];else if(d.dow===0||d.dow===6)data.cell.styles.fillColor=[255,247,237];}}});
   }
@@ -114,7 +120,7 @@ function exportPdf(){
 
 // ---- Projekt speichern ----
 function saveProject(){
-  const data={version:1,settings:{year:A.clampInt($("yearSelect").value,2000,2099),state:$("stateSelect").value,groupSize:A.clampInt($("groupSize").value,1,200),tourDuration:A.clampInt($("tourDuration").value,5,600),levelLow:A.clampInt($("levelLow").value,0,50),levelMedium:A.clampInt($("levelMedium").value,0,50),levelHigh:A.clampInt($("levelHigh").value,0,50),hourlyWage:A.clampFloat($("hourlyWage").value,0,999),svRate:A.clampFloat($("svRate").value,0,100),bufferRate:A.clampFloat($("bufferRate").value,0,100),excludeHolidays:$("excludeHolidays").checked},weekTours:Object.assign({},state.weekTours),publicMap:Object.assign({},state.publicMap),schoolMap:Object.assign({},state.schoolMap),yearDays:state.yearDays.map(d=>({key:d.key,tours:d.tours,level:d.level,notes:d.notes}))};
+  const data={version:2,settings:{year:A.clampInt($("yearSelect").value,2000,2099),state:$("stateSelect").value,groupSize:A.clampInt($("groupSize").value,1,200),tourDuration:A.clampInt($("tourDuration").value,5,600),prepTime:A.clampInt($("prepTime").value,0,120),followTime:A.clampInt($("followTime").value,0,120),levelLow:A.clampInt($("levelLow").value,0,50),levelMedium:A.clampInt($("levelMedium").value,0,50),levelHigh:A.clampInt($("levelHigh").value,0,50),hourlyWage:A.clampFloat($("hourlyWage").value,0,999),svRate:A.clampFloat($("svRate").value,0,100),bufferRate:A.clampFloat($("bufferRate").value,0,100),excludeHolidays:$("excludeHolidays").checked},weekTours:Object.assign({},state.weekTours),publicMap:Object.assign({},state.publicMap),schoolMap:Object.assign({},state.schoolMap),yearDays:state.yearDays.map(d=>({key:d.key,tours:d.tours,level:d.level,notes:d.notes}))};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   const stLabel=data.settings.state||"bundesweit";
@@ -134,6 +140,8 @@ function loadProject(file){
       $("stateSelect").value=s.state||"";
       $("groupSize").value=s.groupSize||15;
       $("tourDuration").value=s.tourDuration||60;
+      $("prepTime").value=s.prepTime!=null?s.prepTime:0;
+      $("followTime").value=s.followTime!=null?s.followTime:0;
       $("levelLow").value=s.levelLow!=null?s.levelLow:2;
       $("levelMedium").value=s.levelMedium!=null?s.levelMedium:4;
       $("levelHigh").value=s.levelHigh!=null?s.levelHigh:6;
@@ -148,7 +156,6 @@ function loadProject(file){
       if(data.yearDays&&data.yearDays.length){
         state.currentYear=s.year;state.currentState=s.state||"";
         A.buildYearDays(s.year);
-        // Merge saved per-day data
         const saved={};data.yearDays.forEach(d=>{saved[d.key]=d;});
         state.yearDays.forEach(d=>{
           const sv=saved[d.key];

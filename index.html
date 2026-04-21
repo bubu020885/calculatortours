@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Besucher-Führungen-Rechner</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -19,81 +19,112 @@
         <section class="input-form">
             <h2>Einstellungen</h2>
 
-            <div class="form-grid">
-                <div class="form-field">
-                    <label for="yearSelect">Jahr</label>
-                    <input type="number" id="yearSelect" min="2000" max="2099" value="2026">
-                </div>
-                <div class="form-field">
-                    <label for="stateSelect">Bundesland <span class="optional">(für Schulferien)</span></label>
-                    <select id="stateSelect">
-                        <option value="">– Bundesweit (nur Feiertage) –</option>
-                        <option value="BW">Baden-Württemberg</option>
-                        <option value="BY">Bayern</option>
-                        <option value="BE">Berlin</option>
-                        <option value="BB">Brandenburg</option>
-                        <option value="HB">Bremen</option>
-                        <option value="HH">Hamburg</option>
-                        <option value="HE">Hessen</option>
-                        <option value="MV">Mecklenburg-Vorpommern</option>
-                        <option value="NI">Niedersachsen</option>
-                        <option value="NW">Nordrhein-Westfalen</option>
-                        <option value="RP">Rheinland-Pfalz</option>
-                        <option value="SL">Saarland</option>
-                        <option value="SN">Sachsen</option>
-                        <option value="ST">Sachsen-Anhalt</option>
-                        <option value="SH">Schleswig-Holstein</option>
-                        <option value="TH">Thüringen</option>
-                    </select>
-                </div>
-                <div class="form-field">
-                    <label for="groupSize">Gruppengröße</label>
-                    <input type="number" id="groupSize" min="1" max="200" value="15">
-                </div>
-                <div class="form-field">
-                    <label for="tourDuration">Dauer je Führung (Min.)</label>
-                    <input type="number" id="tourDuration" min="5" max="600" step="5" value="60">
+            <div class="form-category">
+                <h3 class="category-title">Einstellungen Kalender</h3>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="yearSelect">Jahr</label>
+                        <input type="number" id="yearSelect" min="2000" max="2099" value="2026">
+                    </div>
+                    <div class="form-field">
+                        <label for="stateSelect">Bundesland <span class="optional">(für Schulferien)</span></label>
+                        <select id="stateSelect">
+                            <option value="">– Bundesweit (nur Feiertage) –</option>
+                            <option value="BW">Baden-Württemberg</option>
+                            <option value="BY">Bayern</option>
+                            <option value="BE">Berlin</option>
+                            <option value="BB">Brandenburg</option>
+                            <option value="HB">Bremen</option>
+                            <option value="HH">Hamburg</option>
+                            <option value="HE">Hessen</option>
+                            <option value="MV">Mecklenburg-Vorpommern</option>
+                            <option value="NI">Niedersachsen</option>
+                            <option value="NW">Nordrhein-Westfalen</option>
+                            <option value="RP">Rheinland-Pfalz</option>
+                            <option value="SL">Saarland</option>
+                            <option value="SN">Sachsen</option>
+                            <option value="ST">Sachsen-Anhalt</option>
+                            <option value="SH">Schleswig-Holstein</option>
+                            <option value="TH">Thüringen</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-grid form-grid-2">
-                <div class="form-field">
-                    <label for="levelLow">LOW · Führungen/Tag</label>
-                    <input type="number" id="levelLow" min="0" max="50" value="2">
-                </div>
-                <div class="form-field">
-                    <label for="levelMedium">MEDIUM · Führungen/Tag</label>
-                    <input type="number" id="levelMedium" min="0" max="50" value="4">
-                </div>
-                <div class="form-field">
-                    <label for="levelHigh">HIGH · Führungen/Tag</label>
-                    <input type="number" id="levelHigh" min="0" max="50" value="6">
-                </div>
-                <div class="form-field check">
-                    <label>
-                        <input type="checkbox" id="excludeHolidays" checked>
-                        Feiertage als Ruhetage (0 Führungen)
-                    </label>
+            <hr class="form-separator">
+
+            <div class="form-category">
+                <h3 class="category-title">Einstellung Touren</h3>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="groupSize">Gruppengröße</label>
+                        <input type="number" id="groupSize" min="1" max="200" value="15">
+                    </div>
+                    <div class="form-field">
+                        <label for="tourDuration">Dauer je Führung (Min.)</label>
+                        <input type="number" id="tourDuration" min="5" max="600" step="5" value="60">
+                    </div>
                 </div>
             </div>
 
-            <div class="form-grid form-grid-2">
-                <div class="form-field">
-                    <label for="hourlyWage">Stundenlohn (€/h)</label>
-                    <input type="number" id="hourlyWage" min="0" max="999" step="0.50" value="15.00">
-                </div>
-                <div class="form-field">
-                    <label for="svRate">SV-Aufschlag Arbeitgeber (%)</label>
-                    <input type="number" id="svRate" min="0" max="100" step="0.5" value="20">
-                </div>
-                <div class="form-field">
-                    <label for="bufferRate">Puffer Krankheit / Urlaub (%)</label>
-                    <input type="number" id="bufferRate" min="0" max="100" step="0.5" value="25">
+            <hr class="form-separator">
+
+            <div class="form-category">
+                <h3 class="category-title">Einstellung Auslastung</h3>
+                <div class="form-grid form-grid-2">
+                    <div class="form-field">
+                        <label for="levelLow">LOW · Führungen/Tag</label>
+                        <input type="number" id="levelLow" min="0" max="50" value="2">
+                    </div>
+                    <div class="form-field">
+                        <label for="levelMedium">MEDIUM · Führungen/Tag</label>
+                        <input type="number" id="levelMedium" min="0" max="50" value="4">
+                    </div>
+                    <div class="form-field">
+                        <label for="levelHigh">HIGH · Führungen/Tag</label>
+                        <input type="number" id="levelHigh" min="0" max="50" value="6">
+                    </div>
+                    <div class="form-field check">
+                        <label>
+                            <input type="checkbox" id="excludeHolidays" checked>
+                            Feiertage als Ruhetage (0 Führungen)
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <fieldset class="template-week">
-                <legend>Musterwoche – Anzahl Führungen pro Wochentag</legend>
+            <hr class="form-separator">
+
+            <div class="form-category">
+                <h3 class="category-title">Einstellung Personal</h3>
+                <div class="form-grid form-grid-2">
+                    <div class="form-field">
+                        <label for="prepTime">Vorlaufzeit pro Führung (Min.)</label>
+                        <input type="number" id="prepTime" min="0" max="120" step="5" value="0">
+                    </div>
+                    <div class="form-field">
+                        <label for="followTime">Nachlaufzeit pro Führung (Min.)</label>
+                        <input type="number" id="followTime" min="0" max="120" step="5" value="0">
+                    </div>
+                    <div class="form-field">
+                        <label for="hourlyWage">Stundenlohn (€/h)</label>
+                        <input type="number" id="hourlyWage" min="0" max="999" step="0.50" value="15.00">
+                    </div>
+                    <div class="form-field">
+                        <label for="svRate">SV-Aufschlag Arbeitgeber (%)</label>
+                        <input type="number" id="svRate" min="0" max="100" step="0.5" value="20">
+                    </div>
+                    <div class="form-field">
+                        <label for="bufferRate">Puffer Krankheit / Urlaub (%)</label>
+                        <input type="number" id="bufferRate" min="0" max="100" step="0.5" value="25">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="form-separator">
+
+            <div class="template-week">
+                <h3 class="category-title">Musterwoche – Anzahl Führungen pro Wochentag</h3>
                 <div class="hint">Legen Sie je Wochentag die Anzahl der Führungen fest. Schnellwahl über LOW / MED / HIGH. Diese Musterwoche wird bei „Jahreskalender generieren" auf jedes passende Datum übertragen.</div>
                 <div class="template-grid" id="templateGrid"></div>
                 <div class="template-bulk">
@@ -102,34 +133,41 @@
                     <button type="button" data-bulk="high" class="btn-secondary">Alle HIGH</button>
                     <button type="button" data-bulk="zero" class="btn-secondary">Zurücksetzen</button>
                 </div>
-            </fieldset>
+            </div>
+
+            <hr class="form-separator">
 
             <div class="form-actions">
-                <button type="button" id="loadProjectBtn" class="btn-secondary">Projekt laden</button>
-                <input type="file" id="loadFileInput" accept=".json" class="hidden">
-                <button type="button" id="generateBtn" class="btn-success">Jahreskalender generieren</button>
-                <button type="button" id="applyTemplateBtn">Musterwoche erneut anwenden</button>
-                <button type="button" id="resetYearBtn" class="btn-secondary">Jahr zurücksetzen</button>
+                <div class="action-row">
+                    <button type="button" id="loadProjectBtn" class="btn-secondary">Projekt laden</button>
+                    <input type="file" id="loadFileInput" accept=".json" class="hidden">
+                    <button type="button" id="saveProjectBtn" class="btn-secondary">Projekt speichern</button>
+                </div>
+                <div class="action-row">
+                    <button type="button" id="generateBtn" class="btn-success">Jahreskalender generieren</button>
+                    <button type="button" id="applyTemplateBtn">Musterwoche erneut anwenden</button>
+                    <button type="button" id="resetYearBtn" class="btn-secondary">Jahr zurücksetzen</button>
+                </div>
             </div>
 
             <div class="info-msg" id="infoMsg"></div>
         </section>
 
         <div class="actions-bar">
-            <div class="actions">
+            <div class="actions-tabs">
                 <button class="tab-btn is-active" data-view="week">Wochenauswertung</button>
                 <button class="tab-btn" data-view="year">Jahreskalender</button>
             </div>
-            <div class="actions" id="exportActions" hidden>
+            <div class="actions-export" id="exportActions" hidden>
                 <button type="button" id="exportExcelBtn" class="btn-success">Excel-Export</button>
                 <button type="button" id="exportPdfBtn">PDF-Export</button>
-                <button type="button" id="saveProjectBtn" class="btn-secondary">Projekt speichern</button>
             </div>
-            <div class="legend">
-                <span class="legend-item"><span class="legend-swatch sw-weekend"></span>Wochenende</span>
-                <span class="legend-item"><span class="legend-swatch sw-holiday"></span>Feiertag</span>
-                <span class="legend-item"><span class="legend-swatch sw-school"></span>Schulferien</span>
-            </div>
+        </div>
+
+        <div class="legend-bar">
+            <span class="legend-item"><span class="legend-swatch sw-weekend"></span>Wochenende</span>
+            <span class="legend-item"><span class="legend-swatch sw-holiday"></span>Feiertag</span>
+            <span class="legend-item"><span class="legend-swatch sw-school"></span>Schulferien</span>
         </div>
 
         <!-- MODUS 1: Wochenauswertung -->
@@ -232,7 +270,11 @@
     </main>
 
     <footer>
-        <p>&copy; Besucher-Führungen-Rechner · Schulferien via openholidaysapi.org / ferien-api.de<br><a href="https://www.stefanburian.com">wwww.stefanburian.com</a><br><a href="mailto:contact@stefanburian.com">Contact me for how to work with this tool and make decisions for your daily operations.</a></p>
+        <div class="footer-content">
+            <p>&copy; Besucher-Führungen-Rechner &middot; Schulferien via openholidaysapi.org / ferien-api.de</p>
+            <p><a href="https://www.stefanburian.com" target="_blank">www.stefanburian.com</a></p>
+            <p><a href="mailto:contact@stefanburian.com">contact@stefanburian.com – Kontakt für weitere Informationen</a></p>
+        </div>
     </footer>
 
     <script src="script.js"></script>
