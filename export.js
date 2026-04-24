@@ -34,17 +34,26 @@ function ensureJsPDF(){
   return tryNext(0);
 }
 
+function hasAutoTable(){
+  if(!window.jspdf||!window.jspdf.jsPDF)return false;
+  var p=window.jspdf.jsPDF.prototype;
+  return typeof p.autoTable==="function";
+}
+
 function ensureAutoTable(){
-  if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.prototype.autoTable)return Promise.resolve(true);
+  if(hasAutoTable())return Promise.resolve(true);
+  var saved={e:window.exports,m:window.module};
+  delete window.exports;delete window.module;
   var urls=[
     "lib/jspdf.plugin.autotable.min.js",
     "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js",
     "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"
   ];
+  function restore(){if(saved.e!==undefined)window.exports=saved.e;if(saved.m!==undefined)window.module=saved.m;}
   function tryNext(i){
-    if(i>=urls.length)return Promise.resolve(false);
+    if(i>=urls.length){restore();return Promise.resolve(false);}
     return loadScript(urls[i]).then(function(ok){
-      if(ok&&window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.prototype.autoTable)return true;
+      if(ok&&hasAutoTable()){restore();return true;}
       return tryNext(i+1);
     });
   }
