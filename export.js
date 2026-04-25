@@ -4,68 +4,10 @@ var A=window._tourApp;
 if(!A){console.error("_tourApp not found");return;}
 var $=A.$,state=A.state;
 
-function loadScript(url){
-  return new Promise(function(resolve){
-    var s=document.createElement("script");
-    s.src=url;
-    s.onload=function(){resolve(true);};
-    s.onerror=function(){resolve(false);};
-    document.head.appendChild(s);
-  });
-}
-
-function cleanGlobals(){
-  var s={};
-  if(typeof window.exports!=="undefined"){s.exports=window.exports;delete window.exports;}
-  if(typeof window.module!=="undefined"){s.module=window.module;delete window.module;}
-  return s;
-}
-function restoreGlobals(s){
-  if("exports" in s)window.exports=s.exports;
-  if("module" in s)window.module=s.module;
-}
-
-function ensurePdfLibs(){
-  if(window.jspdf&&window.jspdf.jsPDF&&typeof window.jspdf.jsPDF.prototype.autoTable==="function")
-    return Promise.resolve(true);
-
-  var saved=cleanGlobals();
-  var jspdfUrls=[
-    "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js",
-    "lib/jspdf.umd.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"
-  ];
-  var atUrls=[
-    "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.js",
-    "lib/jspdf.plugin.autotable.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"
-  ];
-
-  function loadJsPDF(i){
-    if(window.jspdf&&window.jspdf.jsPDF)return Promise.resolve(true);
-    if(i>=jspdfUrls.length)return Promise.resolve(false);
-    return loadScript(jspdfUrls[i]).then(function(ok){
-      if(ok&&window.jspdf&&window.jspdf.jsPDF)return true;
-      return loadJsPDF(i+1);
-    });
-  }
-
-  function loadAutoTable(i){
-    if(typeof window.jspdf.jsPDF.prototype.autoTable==="function")return Promise.resolve(true);
-    if(i>=atUrls.length)return Promise.resolve(false);
-    return loadScript(atUrls[i]).then(function(ok){
-      if(ok&&typeof window.jspdf.jsPDF.prototype.autoTable==="function")return true;
-      return loadAutoTable(i+1);
-    });
-  }
-
-  return loadJsPDF(0).then(function(ok){
-    if(!ok){restoreGlobals(saved);return false;}
-    return loadAutoTable(0);
-  }).then(function(ok){
-    restoreGlobals(saved);
-    return ok;
-  });
+console.log("[export] init – jspdf:", typeof window.jspdf, "| jsPDF:", window.jspdf&&typeof window.jspdf.jsPDF, "| exports:", typeof window.exports, "| module:", typeof window.module);
+if(window.jspdf&&window.jspdf.jsPDF){
+  var J=window.jspdf.jsPDF;
+  console.log("[export] autoTable on prototype:", typeof J.prototype.autoTable, "| on API:", J.API&&typeof J.API.autoTable, "| API===prototype:", J.API===J.prototype);
 }
 
 // ---- Excel Export ----
@@ -117,17 +59,9 @@ function exportExcel(){
 // ---- PDF Export ----
 function exportPdf(){
   if(!state.yearDays.length){A.setInfo("Bitte zuerst Jahreskalender generieren.","warning");return;}
-  var ready=window.jspdf&&window.jspdf.jsPDF&&typeof window.jspdf.jsPDF.prototype.autoTable==="function";
-  if(!ready){
-    A.setInfo("PDF-Bibliotheken werden geladen...","warning");
-    ensurePdfLibs().then(function(ok){
-      if(!ok){
-        var detail=!window.jspdf?"jsPDF fehlt":!window.jspdf.jsPDF?"jsPDF.jsPDF fehlt":"autoTable fehlt";
-        A.setInfo("PDF-Bibliothek konnte nicht geladen werden ("+detail+"). Bitte Seite neu laden.","error");
-        return;
-      }
-      doPdfExport();
-    });
+  if(!window.jspdf||!window.jspdf.jsPDF){
+    A.setInfo("PDF-Bibliothek (jsPDF) nicht verfügbar. Bitte Seite neu laden.","error");
+    console.error("[export] jspdf:", typeof window.jspdf, "exports:", typeof window.exports, "module:", typeof window.module);
     return;
   }
   doPdfExport();
