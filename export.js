@@ -10,20 +10,27 @@ function exportExcel(){
   if(typeof XLSX==="undefined"){A.setInfo("Excel-Bibliothek nicht verfügbar. Seite neu laden.","error");return;}
   try{
     var gs=A.groupSize(),sDur=A.staffMin(),w=A.wage(),sv=A.svFactor(),bf=A.bufFactor();
-    var vl=A.vorlauf(),nl=A.nachlauf(),dur=A.duration(),ap=A.avgPrice();
+    var vl=A.vorlauf(),nl=A.nachlauf(),dur=A.duration(),ap=A.avgPrice(),fpp=A.totalFeePerPerson(),opm=A.opCostMonthly();
     var rows=state.yearDays.map(function(d){
-      var hrs=d.tours*sDur/60;var rev=d.tours*gs*ap;
+      var hrs=d.tours*sDur/60;var guests=d.tours*gs;var rev=guests*ap;var ded=guests*fpp;var labor=hrs*w*sv*bf;
       return{Datum:A.formatDate(d.date),Tag:A.DOW_SHORT[d.dow],Feiertag:d.ph,Schulferien:d.sh,
         Auslastung:d.level==="none"?"Keine":d.level.toUpperCase(),Führungen:d.tours,
-        Gäste:d.tours*gs,Umsatz:Math.round(rev*100)/100,"MA-Stunden":Math.round(hrs*100)/100,
-        "MA-Kosten":Math.round(hrs*w*100)/100,"MA-Kosten+SV+Puffer":Math.round(hrs*w*sv*bf*100)/100,Notizen:d.notes};
+        Gäste:guests,Umsatz:Math.round(rev*100)/100,"Abzüge (Gebühren)":Math.round(ded*100)/100,
+        "Lohnkosten (inkl. SV+Puffer)":Math.round(labor*100)/100,
+        Rohertrag:Math.round((rev-ded-labor)*100)/100,
+        "MA-Stunden":Math.round(hrs*100)/100,Notizen:d.notes};
     });
     var ms=A.getMonthlyStats();
     var mRows=ms.map(function(m,i){
-      var hrs=m.mins/60;var rev=m.guests*ap;var costFull=hrs*w*sv*bf;
+      var hrs=m.mins/60;var rev=m.guests*ap;var ded=m.guests*fpp;var labor=hrs*w*sv*bf;
+      var rohertrag=rev-ded-labor;var ebitda=rohertrag-opm;
       return{Monat:A.MONTH_NAMES[i],Führungen:m.tours,Gäste:m.guests,Tage:m.days,
-        "MA-Stunden":Math.round(hrs*100)/100,"MA-Kosten+SV+Puffer":Math.round(costFull*100)/100,
-        Umsatz:Math.round(rev*100)/100,Ergebnis:Math.round((rev-costFull)*100)/100};
+        "MA-Stunden":Math.round(hrs*100)/100,Umsatz:Math.round(rev*100)/100,
+        "Abzüge (Gebühren)":Math.round(ded*100)/100,
+        "Lohnkosten (inkl. SV+Puffer)":Math.round(labor*100)/100,
+        Rohertrag:Math.round(rohertrag*100)/100,
+        "Op. Kosten":Math.round(opm*100)/100,
+        EBITDA:Math.round(ebitda*100)/100};
     });
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Jahreskalender");
@@ -39,9 +46,19 @@ function exportExcel(){
       {Einstellung:"Eintrittspreis Erwachsene (€)",Wert:A.priceAdult()},
       {Einstellung:"Eintrittspreis Ermäßigt (€)",Wert:A.priceReduced()},
       {Einstellung:"Ø Eintrittspreis (€)",Wert:Math.round(ap*100)/100},
+      {Einstellung:"Ticketgebühr ("+A.ticketFeeMode()+")",Wert:A.ticketFeeValue()},
+      {Einstellung:"Payment Gebühren (%)",Wert:A.paymentFeePercent()},
+      {Einstellung:"Sonstige Aufwendungen (€/TN)",Wert:A.otherCostPerPerson()},
+      {Einstellung:"Ø Abzug pro Teilnehmer (€)",Wert:Math.round(fpp*100)/100},
       {Einstellung:"Stundenlohn (€/h)",Wert:w},
       {Einstellung:"SV-Aufschlag (%)",Wert:Math.round((sv-1)*100*10)/10},
       {Einstellung:"Puffer Krankheit/Urlaub (%)",Wert:Math.round((bf-1)*100*10)/10},
+      {Einstellung:"Reinigung (€/Monat)",Wert:A.costCleaning()},
+      {Einstellung:"Stromkosten (€/Monat)",Wert:A.costElectricity()},
+      {Einstellung:"Instandhaltung (€/Monat)",Wert:A.costMaintenance()},
+      {Einstellung:"Marketing (€/Monat)",Wert:A.costMarketing()},
+      {Einstellung:"Sonstige Mietgebühren (€/Monat)",Wert:A.costRent()},
+      {Einstellung:"Operative Kosten gesamt (€/Monat)",Wert:Math.round(opm*100)/100},
       {Einstellung:"LOW Führungen/Tag",Wert:A.levels().low},
       {Einstellung:"MEDIUM Führungen/Tag",Wert:A.levels().medium},
       {Einstellung:"HIGH Führungen/Tag",Wert:A.levels().high},
@@ -66,10 +83,13 @@ function doPdfExport(){
     var jsPDF=window.jspdf.jsPDF;
     var doc=new jsPDF("p","mm","a4");
     var gs=A.groupSize(),dur=A.duration(),sDur=A.staffMin(),w=A.wage(),sv=A.svFactor(),bf=A.bufFactor();
-    var vl=A.vorlauf(),nl=A.nachlauf(),ap=A.avgPrice();
+    var vl=A.vorlauf(),nl=A.nachlauf(),ap=A.avgPrice(),fpp=A.totalFeePerPerson(),opm=A.opCostMonthly();
     var tt=0,ad=0;
     state.yearDays.forEach(function(d){tt+=d.tours;if(d.tours>0)ad++;});
-    var totalHrs=tt*sDur/60,totalCost=totalHrs*w,totalRevenue=tt*gs*ap;
+    var totalGuests=tt*gs,totalHrs=tt*sDur/60,totalRevenue=totalGuests*ap;
+    var totalDeductions=totalGuests*fpp,totalLaborFull=totalHrs*w*sv*bf;
+    var totalRohertrag=totalRevenue-totalDeductions-totalLaborFull;
+    var totalOpCost=opm*12,totalEbitda=totalRohertrag-totalOpCost;
     var ms=A.getMonthlyStats();
 
     // PAGE 1: Einstellungen
@@ -89,9 +109,19 @@ function doPdfExport(){
       ["Eintrittspreis Erwachsene",A.formatEuro(A.priceAdult())],
       ["Eintrittspreis Ermäßigt",A.formatEuro(A.priceReduced())],
       ["Ø Eintrittspreis",A.formatEuro(ap)],
+      ["Ticketgebühr ("+A.ticketFeeMode()+")",A.ticketFeeMode()==="percent"?A.ticketFeeValue()+" %":A.formatEuro(A.ticketFeeValue())],
+      ["Payment Gebühren",A.paymentFeePercent()+" %"],
+      ["Sonstige Aufwendungen/TN",A.formatEuro(A.otherCostPerPerson())],
+      ["Ø Abzug pro Teilnehmer",A.formatEuro(fpp)],
       ["Stundenlohn",A.formatEuro(w)],
       ["SV-Aufschlag",Math.round((sv-1)*100*10)/10+" %"],
       ["Puffer Krankheit/Urlaub",Math.round((bf-1)*100*10)/10+" %"],
+      ["Reinigung (€/Monat)",A.formatEuro(A.costCleaning())],
+      ["Stromkosten (€/Monat)",A.formatEuro(A.costElectricity())],
+      ["Instandhaltung (€/Monat)",A.formatEuro(A.costMaintenance())],
+      ["Marketing (€/Monat)",A.formatEuro(A.costMarketing())],
+      ["Sonstige Mietgebühren (€/Monat)",A.formatEuro(A.costRent())],
+      ["Operative Kosten gesamt (€/Monat)",A.formatEuro(opm)],
       ["LOW",A.levels().low+" Führungen/Tag"],
       ["MEDIUM",A.levels().medium+" Führungen/Tag"],
       ["HIGH",A.levels().high+" Führungen/Tag"],
@@ -103,29 +133,30 @@ function doPdfExport(){
     doc.text("Jahresstatistik",14,18);
     doc.autoTable({startY:23,head:[["Kennzahl","Wert"]],body:[
       ["Führungen / Jahr",String(tt)],
-      ["Gäste / Jahr",String(tt*gs)],
+      ["Gäste / Jahr",String(totalGuests)],
       ["MA-Stunden",A.formatHours(tt*sDur)],
       ["Führungstage",String(ad)],
-      ["MA-Kosten (Brutto)",A.formatEuro(totalCost)],
-      ["MA-Kosten + SV + Puffer",A.formatEuro(totalCost*sv*bf)],
       ["Umsatz / Jahr",A.formatEuro(totalRevenue)],
-      ["Ergebnis (Umsatz − Kosten)",A.formatEuro(totalRevenue-totalCost*sv*bf)],
-    ],theme:"grid",headStyles:{fillColor:[63,81,181]},styles:{fontSize:9},columnStyles:{0:{fontStyle:"bold"}},margin:{left:14,right:14}});
+      ["Abzüge (Gebühren)",A.formatEuro(totalDeductions)],
+      ["Lohnkosten (inkl. SV+Puffer)",A.formatEuro(totalLaborFull)],
+      ["Rohertrag",A.formatEuro(totalRohertrag)],
+      ["Operative Kosten / Jahr",A.formatEuro(totalOpCost)],
+      ["EBITDA",A.formatEuro(totalEbitda)],
+    ],theme:"grid",headStyles:{fillColor:[63,81,181]},styles:{fontSize:9},columnStyles:{0:{fontStyle:"bold"}},margin:{left:14,right:14},
+    didParseCell:function(data){if(data.section==="body"&&(data.row.index===7||data.row.index===9)){var v=parseFloat(String(data.cell.raw).replace(/[^0-9,\-]/g,"").replace(",","."));if(data.column.index===1&&!isNaN(v))data.cell.styles.textColor=v>=0?[6,95,70]:[153,27,27];}}});
 
     var y3=doc.lastAutoTable.finalY+10;
     doc.setFontSize(14);doc.setFont(undefined,"bold");doc.text("Monatsübersicht",14,y3);
     var mBody=ms.map(function(m,i){
-      var hrs=m.mins/60;var rev=m.guests*ap;var cf=hrs*w*sv*bf;
-      return[A.MONTH_NAMES[i],m.tours,m.guests,m.days,A.formatHours(m.mins),A.formatEuro(cf),A.formatEuro(rev),A.formatEuro(rev-cf)];
+      var hrs=m.mins/60;var rev=m.guests*ap;var ded=m.guests*fpp;var labor=hrs*w*sv*bf;
+      var rohertrag=rev-ded-labor;var ebitda=rohertrag-opm;
+      return[A.MONTH_NAMES[i],m.tours,m.guests,m.days,A.formatEuro(rev),A.formatEuro(ded),A.formatEuro(labor),A.formatEuro(rohertrag),A.formatEuro(ebitda)];
     });
     var sumT=ms.reduce(function(s,m){return s+m.tours;},0);
     var sumG=ms.reduce(function(s,m){return s+m.guests;},0);
     var sumD=ms.reduce(function(s,m){return s+m.days;},0);
-    var sumM=ms.reduce(function(s,m){return s+m.mins;},0);
-    var sumH=sumM/60;
-    var sumCF=sumH*w*sv*bf;var sumRev=sumG*ap;
-    mBody.push(["GESAMT",sumT,sumG,sumD,A.formatHours(sumM),A.formatEuro(sumCF),A.formatEuro(sumRev),A.formatEuro(sumRev-sumCF)]);
-    doc.autoTable({startY:y3+4,head:[["Monat","Führ.","Gäste","Tage","Std.","Personal","Umsatz","Ergebnis"]],body:mBody,theme:"grid",headStyles:{fillColor:[63,81,181]},styles:{fontSize:8,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"}},margin:{left:14,right:14},didParseCell:function(data){if(data.row.index===mBody.length-1){data.cell.styles.fontStyle="bold";data.cell.styles.fillColor=[232,234,246];}if(data.column.index===7&&data.section==="body"){var v=parseFloat(String(data.cell.raw).replace(/[^0-9,\-]/g,"").replace(",","."));if(!isNaN(v))data.cell.styles.textColor=v>=0?[6,95,70]:[153,27,27];}}});
+    mBody.push(["GESAMT",sumT,sumG,sumD,A.formatEuro(totalRevenue),A.formatEuro(totalDeductions),A.formatEuro(totalLaborFull),A.formatEuro(totalRohertrag),A.formatEuro(totalEbitda)]);
+    doc.autoTable({startY:y3+4,head:[["Monat","Führ.","Gäste","Tage","Umsatz","Abzüge","Lohn","Rohertrag","EBITDA"]],body:mBody,theme:"grid",headStyles:{fillColor:[63,81,181]},styles:{fontSize:7.5,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"}},margin:{left:14,right:14},didParseCell:function(data){if(data.row.index===mBody.length-1){data.cell.styles.fontStyle="bold";data.cell.styles.fillColor=[232,234,246];}if((data.column.index===7||data.column.index===8)&&data.section==="body"){var v=parseFloat(String(data.cell.raw).replace(/[^0-9,\-]/g,"").replace(",","."));if(!isNaN(v))data.cell.styles.textColor=v>=0?[6,95,70]:[153,27,27];}}});
 
     // PAGES 3+: Monatsseiten
     for(var mi=0;mi<12;mi++){
@@ -153,7 +184,7 @@ function doPdfExport(){
 // ---- Projekt speichern ----
 function saveProject(){
   try{
-    var data={version:2,settings:{year:A.clampInt($("yearSelect").value,2000,2099),state:$("stateSelect").value,groupSize:A.clampInt($("groupSize").value,1,200),tourDuration:A.clampInt($("tourDuration").value,5,600),prepTime:A.clampInt($("prepTime").value,0,120),followTime:A.clampInt($("followTime").value,0,120),levelLow:A.clampInt($("levelLow").value,0,50),levelMedium:A.clampInt($("levelMedium").value,0,50),levelHigh:A.clampInt($("levelHigh").value,0,50),hourlyWage:A.clampFloat($("hourlyWage").value,0,999),svRate:A.clampFloat($("svRate").value,0,100),bufferRate:A.clampFloat($("bufferRate").value,0,100),priceAdult:A.clampFloat($("priceAdult").value,0,999),priceReduced:A.clampFloat($("priceReduced").value,0,999),excludeHolidays:$("excludeHolidays").checked},weekTours:Object.assign({},state.weekTours),publicMap:Object.assign({},state.publicMap),schoolMap:Object.assign({},state.schoolMap),yearDays:state.yearDays.map(function(d){return{key:d.key,tours:d.tours,level:d.level,notes:d.notes};})};
+    var data={version:3,settings:{year:A.clampInt($("yearSelect").value,2000,2099),state:$("stateSelect").value,groupSize:A.clampInt($("groupSize").value,1,200),tourDuration:A.clampInt($("tourDuration").value,5,600),prepTime:A.clampInt($("prepTime").value,0,120),followTime:A.clampInt($("followTime").value,0,120),levelLow:A.clampInt($("levelLow").value,0,50),levelMedium:A.clampInt($("levelMedium").value,0,50),levelHigh:A.clampInt($("levelHigh").value,0,50),hourlyWage:A.clampFloat($("hourlyWage").value,0,999),svRate:A.clampFloat($("svRate").value,0,100),bufferRate:A.clampFloat($("bufferRate").value,0,100),priceAdult:A.clampFloat($("priceAdult").value,0,999),priceReduced:A.clampFloat($("priceReduced").value,0,999),ticketFeeMode:$("ticketFeeMode").value,ticketFeeValue:A.clampFloat($("ticketFeeValue").value,0,999),paymentFeePercent:A.clampFloat($("paymentFeePercent").value,0,100),otherCostPerPerson:A.clampFloat($("otherCostPerPerson").value,0,999),costCleaning:A.clampFloat($("costCleaning").value,0,99999),costElectricity:A.clampFloat($("costElectricity").value,0,99999),costMaintenance:A.clampFloat($("costMaintenance").value,0,99999),costMarketing:A.clampFloat($("costMarketing").value,0,99999),costRent:A.clampFloat($("costRent").value,0,99999),excludeHolidays:$("excludeHolidays").checked},weekTours:Object.assign({},state.weekTours),publicMap:Object.assign({},state.publicMap),schoolMap:Object.assign({},state.schoolMap),yearDays:state.yearDays.map(function(d){return{key:d.key,tours:d.tours,level:d.level,notes:d.notes};})};
     var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     var a=document.createElement("a");a.href=URL.createObjectURL(blob);
     a.download="Fuehrungen-"+(data.settings.state||"bundesweit")+"-"+data.settings.year+".json";
@@ -184,6 +215,15 @@ function loadProject(file){
       $("bufferRate").value=s.bufferRate!=null?s.bufferRate:25;
       $("priceAdult").value=s.priceAdult!=null?s.priceAdult:12;
       $("priceReduced").value=s.priceReduced!=null?s.priceReduced:8;
+      $("ticketFeeMode").value=s.ticketFeeMode||"percent";
+      $("ticketFeeValue").value=s.ticketFeeValue!=null?s.ticketFeeValue:0;
+      $("paymentFeePercent").value=s.paymentFeePercent!=null?s.paymentFeePercent:0;
+      $("otherCostPerPerson").value=s.otherCostPerPerson!=null?s.otherCostPerPerson:0;
+      $("costCleaning").value=s.costCleaning!=null?s.costCleaning:0;
+      $("costElectricity").value=s.costElectricity!=null?s.costElectricity:0;
+      $("costMaintenance").value=s.costMaintenance!=null?s.costMaintenance:0;
+      $("costMarketing").value=s.costMarketing!=null?s.costMarketing:0;
+      $("costRent").value=s.costRent!=null?s.costRent:0;
       $("excludeHolidays").checked=s.excludeHolidays!==false;
       if(data.weekTours)Object.assign(state.weekTours,data.weekTours);
       A.renderWeek();

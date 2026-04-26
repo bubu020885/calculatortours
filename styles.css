@@ -98,6 +98,8 @@ section h2 { font-size: 1.3rem; }
 .form-group[data-color="green"]  { border-left: 4px solid var(--success); }
 .form-group[data-color="amber"]  { border-left: 4px solid #f59e0b; }
 .form-group[data-color="purple"] { border-left: 4px solid #8b5cf6; }
+.form-group[data-color="red"]    { border-left: 4px solid #ef4444; }
+.form-group[data-color="teal"]   { border-left: 4px solid #0d9488; }
 
 .group-label {
   width: 100%;
@@ -712,6 +714,46 @@ button:disabled { background: #9ca3af; cursor: not-allowed; }
 .cost-card.revenue {
   background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
 }
+.cost-card.rohertrag {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+.cost-bar-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* EBITDA highlight bar */
+.ebitda-bar {
+  margin-bottom: 20px;
+}
+.ebitda-card {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: white;
+  padding: 22px 28px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.25);
+  text-align: center;
+}
+.ebitda-card .label {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.ebitda-card .value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Avg display color variants */
+.avg-display-red {
+  color: #dc2626;
+  background: #fee2e2;
+}
+.avg-display-teal {
+  color: #0d9488;
+  background: #ccfbf1;
+}
 
 /* Footer */
 footer {
@@ -759,6 +801,7 @@ footer {
 @media (max-width: 900px) {
   .summary-bar { grid-template-columns: repeat(2, 1fr); }
   .cost-bar { grid-template-columns: 1fr; }
+  .cost-bar-4 { grid-template-columns: repeat(2, 1fr); }
   .monthly-grid { grid-template-columns: repeat(3, 1fr); }
   .actions-export {
     position: static;
